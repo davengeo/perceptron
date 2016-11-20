@@ -3,8 +3,7 @@
   (:require [clojure.data.generators :as gen]))
 
 (defn rnd-flts [n] (take n (repeatedly #(- (* (gen/float) 2) 1))))
-(defn fill-with [n] (take n (cycle '(1 0))))
-(defn init-layer [n m] (sge n m (fill-with (* n m))))
+(defn init-layer [n m] (sge n m (rnd-flts (* n m))))
 
 ; refactor to multipethod or use a protocol
 ; (defmulti sigmoid :mode)
@@ -12,9 +11,10 @@
 (def training (fn ^double [^double x] (* x (- 1 x))))
 
 (defn mm-map! [mm fnx]
-  (for [x (range (mrows mm))]
+  (do (for [x (range (mrows mm))]
     (for [y (range (ncols mm))]
-      (alter! mm x y fnx))))
+      (alter! mm x y fnx)))
+      (identity mm)))
 
 ; create a record with all the dimensions and biases
 (def input 4)
@@ -24,9 +24,9 @@
 (def neurons2 10)
 
 (def syn0 (init-layer input neurons0))
-(def syn1 (init-layer neurons0 neurons1))
-(def syn2 (init-layer neurons1 neurons2))
-(def syn3 (init-layer neurons2 output))
+(def syn1 (init-layer neurons1 neurons0))
+(def syn2 (init-layer neurons2 neurons1))
+(def syn3 (init-layer output neurons2))
 
 (defn l1 [x] (mm-map! (mm syn0 x) sigmoid))
 (defn l2 [x] (mm-map! (mm syn1 (l1 x)) sigmoid))
@@ -35,4 +35,4 @@
 
 (def my-vector (sge 4 4 (rnd-flts 16)))
 
-(println (l2 my-vector))
+(println (l4 my-vector))
